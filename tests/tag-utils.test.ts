@@ -33,24 +33,82 @@ describe("getStableInlineTags", () => {
   };
 
   it("defers a tag that is still at the active editor boundary", () => {
-    expect(getStableInlineTags([trailingTag], 11, false, 10)).toEqual([]);
+    expect(getStableInlineTags([trailingTag], "#financial ", false, 10)).toEqual([]);
   });
 
   it("includes a tag after the user types a boundary character", () => {
-    expect(getStableInlineTags([trailingTag], 11, false, 11)).toEqual([
+    expect(getStableInlineTags([trailingTag], "#financial ", false, 11)).toEqual([
       "#financial",
     ]);
   });
 
+  it.each([" ", "\t", "\n", "\r\n"])(
+    "includes a completed tag after delimiter %j",
+    (delimiter) => {
+      const content = `#financial${delimiter}`;
+      expect(
+        getStableInlineTags([trailingTag], content, false, content.length),
+      ).toEqual(["#financial"]);
+    },
+  );
+
+  it("does not sync a stale cached prefix while the live tag is growing", () => {
+    const cachedPrefix = {
+      tag: "#fin",
+      position: { start: { offset: 0 }, end: { offset: 4 } },
+    };
+    expect(
+      getStableInlineTags([cachedPrefix], "#financial", false, 10),
+    ).toEqual([]);
+    expect(
+      getStableInlineTags([cachedPrefix], "#financial ", false, 11),
+    ).toEqual([]);
+  });
+
+  it("does not sync a tag merely because the cursor moved away", () => {
+    const unfinishedTag = {
+      tag: "#financial",
+      position: { start: { offset: 6 }, end: { offset: 16 } },
+    };
+    expect(
+      getStableInlineTags([unfinishedTag], "Text: #financial", false, 0),
+    ).toEqual([]);
+  });
+
+  it("rejects cached offsets that no longer match the live document", () => {
+    expect(
+      getStableInlineTags([trailingTag], "Text: #financial ", false, 17),
+    ).toEqual([]);
+  });
+
+  it("syncs a completed tag while deferring a new tag on the same line", () => {
+    const completedTag = {
+      tag: "#work",
+      position: { start: { offset: 0 }, end: { offset: 5 } },
+    };
+    const newTag = {
+      tag: "#financial",
+      position: { start: { offset: 6 }, end: { offset: 16 } },
+    };
+    expect(
+      getStableInlineTags(
+        [completedTag, newTag],
+        "#work #financial",
+        false,
+        16,
+      ),
+    ).toEqual(["#work"]);
+  });
+
   it("includes a trailing tag when the user leaves the note", () => {
-    expect(getStableInlineTags([trailingTag], 10, true, null)).toEqual([
+    expect(getStableInlineTags([trailingTag], "#financial", true, null)).toEqual([
       "#financial",
     ]);
   });
 
   it("uses the document boundary when no editor cursor is available", () => {
-    expect(getStableInlineTags([trailingTag], 10, false, null)).toEqual([]);
-    expect(getStableInlineTags([trailingTag], 11, false, null)).toEqual([
+    expect(getStableInlineTags([trailingTag], "#financial", false, null)).toEqual([]);
+    expect(getStableInlineTags([trailingTag], "#financial ", false, null)).toEqual([
       "#financial",
     ]);
   });

@@ -86,9 +86,25 @@ npm test
 npm run build
 ```
 
-The production build creates `main.js`. To install the plugin manually, place
-`main.js` and `manifest.json` in a vault folder named
-`.obsidian/plugins/tagatha`, then enable **Tagatha** in Community plugins.
+The production build creates `main.js`. Install it into an existing vault with
+Python 3:
+
+```bash
+npm run install:vault -- --vault /path/to/vault --dry-run
+npm run install:vault -- --vault /path/to/vault
+# When Obsidian is running and this reload is authorized:
+npm run install:vault -- --vault /path/to/vault --reload
+```
+
+The installer backs up existing `main.js` and `manifest.json` to a printed
+temporary directory, copies the build, and verifies both files. It preserves
+`data.json` and does not enable the plugin. `--reload` uses Obsidian CLI to reload
+Tagatha and display captured errors; use it with Obsidian already running. Build
+and test the source before installing; the installer does not repeat those checks.
+
+For a focused bug fix, run the existing tests and build once, then check the
+reported failure and intended behavior in one runtime scenario. Broaden runtime
+validation when the change affects data safety, other platforms, or a release.
 
 ## Releases
 

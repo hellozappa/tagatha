@@ -207,13 +207,13 @@ export function removeInlineTags(
 
 export function getStableInlineTags(
   tags: readonly PositionedInlineTag[],
-  contentLength: number,
+  content: string,
   includeTrailingTag: boolean,
   editingOffset: number | null,
 ): string[] {
   return getStableInlineTagPositions(
     tags,
-    contentLength,
+    content,
     includeTrailingTag,
     editingOffset,
   ).map((tag) => tag.tag);
@@ -221,25 +221,30 @@ export function getStableInlineTags(
 
 export function getStableInlineTagPositions(
   tags: readonly PositionedInlineTag[],
-  contentLength: number,
+  content: string,
   includeTrailingTag: boolean,
   editingOffset: number | null,
 ): PositionedInlineTag[] {
-  return tags
-    .filter(
-      (tag) => {
-        if (includeTrailingTag) {
-          return true;
-        }
+  return tags.filter((tag) => {
+    const startOffset = tag.position.start.offset;
+    const endOffset = tag.position.end.offset;
+    if (content.slice(startOffset, endOffset) !== tag.tag) {
+      return false;
+    }
 
-        if (editingOffset !== null) {
-          return (
-            editingOffset < tag.position.start.offset ||
-            editingOffset > tag.position.end.offset
-          );
-        }
+    if (includeTrailingTag) {
+      return true;
+    }
 
-        return tag.position.end.offset < contentLength;
-      },
+    const followingCharacter = content.charAt(endOffset);
+    if (!/[ \t\r\n]/.test(followingCharacter)) {
+      return false;
+    }
+
+    return (
+      editingOffset === null ||
+      editingOffset < startOffset ||
+      editingOffset > endOffset
     );
+  });
 }

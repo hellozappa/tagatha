@@ -197,16 +197,17 @@ export default class TagathaPlugin extends Plugin {
       activeView?.file?.path === path
         ? activeView.editor.posToOffset(activeView.editor.getCursor("head"))
         : null;
-    const contentLength = shouldIncludeTrailingTag
-      ? Number.POSITIVE_INFINITY
-      : (await this.app.vault.cachedRead(abstractFile)).length;
+    const content =
+      activeView?.file?.path === path
+        ? activeView.editor.getValue()
+        : await this.app.vault.cachedRead(abstractFile);
     if (this.isUnloading) {
       return;
     }
 
     const stableInlineTags = getStableInlineTagPositions(
       cachedTags,
-      contentLength,
+      content,
       shouldIncludeTrailingTag,
       editingOffset,
     );

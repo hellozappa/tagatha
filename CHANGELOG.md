@@ -2,6 +2,18 @@
 
 All notable changes to Tagatha are documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- Wait for a space, Tab, or Return before synchronizing an active note's tag.
+- Reject stale cached tag prefixes and offsets while editing.
+
+### Added
+
+- Add a vault installer with runtime backups, asset comparison, dry-run support,
+  and an optional Obsidian CLI reload that preserves plugin settings.
+
 ## [1.0.0] - 2026-09-26
 
 ### Added
